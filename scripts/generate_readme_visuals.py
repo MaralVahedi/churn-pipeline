@@ -146,44 +146,49 @@ def build_workflow_diagram(output_dir: Path) -> None:
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    # Phase bands
+    # Phase bands with clear labels.
     bands = [
-        (0.04, 0.72, 0.92, 0.18, "#dbeafe", "Phase 1: Data and Feature Preparation"),
-        (0.04, 0.44, 0.92, 0.18, "#dcfce7", "Phase 2: Modeling and Evaluation"),
-        (0.04, 0.16, 0.92, 0.18, "#fef3c7", "Phase 3: Decision and Business Action"),
+        (0.04, 0.67, 0.92, 0.22, "#dbeafe", "Phase 1: Data Preparation"),
+        (0.04, 0.39, 0.92, 0.22, "#dcfce7", "Phase 2: Modeling"),
+        (0.04, 0.11, 0.92, 0.22, "#fef3c7", "Phase 3: Decision and Action"),
     ]
     for x, y, w, h, color, label in bands:
-        band = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.012,rounding_size=0.02", linewidth=0, facecolor=color, alpha=0.55)
+        band = FancyBboxPatch(
+            (x, y),
+            w,
+            h,
+            boxstyle="round,pad=0.012,rounding_size=0.02",
+            linewidth=0,
+            facecolor=color,
+            alpha=0.58,
+        )
         ax.add_patch(band)
-        ax.text(x + 0.01, y + h - 0.035, label, ha="left", va="center", fontsize=10, weight="bold", color="#0f172a")
+        ax.text(x + 0.012, y + h - 0.035, label, ha="left", va="center", fontsize=11, weight="bold", color="#0f172a")
 
-    # Steps
-    box_w, box_h = 0.21, 0.11
+    # Steps: simple snake layout with fewer connectors.
+    box_w, box_h = 0.22, 0.11
     steps = [
-        (0.08, 0.75, "1) Raw Data Input", "Customer behavior + plan info", "#bfdbfe"),
-        (0.39, 0.75, "2) Cleaning", "Null checks, duplicates, encoding", "#bfdbfe"),
-        (0.70, 0.75, "3) Feature Matrix", "Model-ready X and y", "#bfdbfe"),
-        (0.08, 0.47, "4) Baseline Model", "Logistic Regression", "#bbf7d0"),
-        (0.39, 0.47, "5) Model Benchmark", "Tree, RF, KNN, SVM, GBM", "#bbf7d0"),
-        (0.70, 0.47, "6) Threshold Tuning", "Precision vs recall trade-off", "#bbf7d0"),
-        (0.23, 0.19, "7) Impact Estimation", "TP / FP / FN operational view", "#fde68a"),
-        (0.55, 0.19, "8) Retention Plan", "Prioritize outreach by churn risk", "#fde68a"),
+        (0.09, 0.72, "1) Raw Data", "Customer profile + behavior", "#bfdbfe"),
+        (0.39, 0.72, "2) Cleaning", "Missing values, duplicates", "#bfdbfe"),
+        (0.69, 0.72, "3) Feature Matrix", "Encoded X and target y", "#bfdbfe"),
+        (0.09, 0.44, "4) Baseline", "Logistic Regression", "#bbf7d0"),
+        (0.39, 0.44, "5) Benchmark", "Tree, RF, KNN, SVM, GBM", "#bbf7d0"),
+        (0.69, 0.44, "6) Threshold", "Precision vs recall choice", "#bbf7d0"),
+        (0.24, 0.16, "7) Impact Estimate", "TP / FP / FN trade-off", "#fde68a"),
+        (0.54, 0.16, "8) Retention Plan", "Prioritized outreach list", "#fde68a"),
     ]
     for x, y, title, subtitle, color in steps:
         _draw_step(ax, x, y, box_w, box_h, title, subtitle, color)
 
-    # Arrows
+    # Clean, non-crossing arrows.
     arrows = [
-        ((0.29, 0.805), (0.39, 0.805)),
-        ((0.60, 0.805), (0.70, 0.805)),
-        ((0.185, 0.75), (0.185, 0.58)),
-        ((0.495, 0.75), (0.495, 0.58)),
-        ((0.805, 0.75), (0.805, 0.58)),
-        ((0.29, 0.525), (0.39, 0.525)),
-        ((0.60, 0.525), (0.70, 0.525)),
-        ((0.805, 0.47), (0.66, 0.30)),
-        ((0.495, 0.47), (0.34, 0.30)),
-        ((0.44, 0.245), (0.55, 0.245)),
+        ((0.31, 0.775), (0.39, 0.775)),  # 1 -> 2
+        ((0.61, 0.775), (0.69, 0.775)),  # 2 -> 3
+        ((0.80, 0.72), (0.20, 0.55)),    # 3 -> 4 (phase transition)
+        ((0.31, 0.495), (0.39, 0.495)),  # 4 -> 5
+        ((0.61, 0.495), (0.69, 0.495)),  # 5 -> 6
+        ((0.80, 0.44), (0.35, 0.27)),    # 6 -> 7 (decision transition)
+        ((0.46, 0.215), (0.54, 0.215)),  # 7 -> 8
     ]
     for start, end in arrows:
         arrow = FancyArrowPatch(
@@ -191,7 +196,7 @@ def build_workflow_diagram(output_dir: Path) -> None:
             posB=end,
             arrowstyle="-|>",
             mutation_scale=12,
-            linewidth=1.4,
+            linewidth=1.5,
             color="#1f2937",
             connectionstyle="arc3,rad=0.0",
         )
@@ -199,14 +204,14 @@ def build_workflow_diagram(output_dir: Path) -> None:
 
     ax.text(
         0.5,
-        0.06,
-        "Notebook flow: from data preparation to actionable retention decisions",
+        0.055,
+        "Flow: prepare data -> compare models -> choose threshold -> execute retention actions",
         ha="center",
         va="center",
         fontsize=10,
         color="#334155",
     )
-    ax.set_title("Churn Pipeline Workflow", fontsize=16, weight="bold", pad=16)
+    ax.set_title("Churn Pipeline Workflow", fontsize=18, weight="bold", pad=14)
     fig.savefig(output_dir / "workflow_pipeline_visual.png", bbox_inches="tight")
     plt.close(fig)
 
