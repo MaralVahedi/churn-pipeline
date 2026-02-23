@@ -29,7 +29,7 @@ Input file compatibility in the notebook:
 
 ## End-to-End Workflow
 
-![Churn Workflow](images/workflow_pipeline_visual.png)
+![Churn Workflow](images/workflow_story_map.png)
 
 Color guide:
 - Blue: data preparation

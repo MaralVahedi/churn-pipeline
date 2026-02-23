@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
 
 
 def build_model_summary_plot(output_dir: Path) -> None:
@@ -141,78 +141,117 @@ def _draw_step(ax, x: float, y: float, w: float, h: float, title: str, subtitle:
 
 
 def build_workflow_diagram(output_dir: Path) -> None:
-    fig, ax = plt.subplots(figsize=(14, 6), dpi=220)
+    fig, ax = plt.subplots(figsize=(15, 5.8), dpi=220)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    # Phase bands with clear labels.
-    bands = [
-        (0.04, 0.67, 0.92, 0.22, "#dbeafe", "Phase 1: Data Preparation"),
-        (0.04, 0.39, 0.92, 0.22, "#dcfce7", "Phase 2: Modeling"),
-        (0.04, 0.11, 0.92, 0.22, "#fef3c7", "Phase 3: Decision and Action"),
-    ]
-    for x, y, w, h, color, label in bands:
-        band = FancyBboxPatch(
-            (x, y),
-            w,
-            h,
-            boxstyle="round,pad=0.012,rounding_size=0.02",
-            linewidth=0,
-            facecolor=color,
-            alpha=0.58,
-        )
-        ax.add_patch(band)
-        ax.text(x + 0.012, y + h - 0.035, label, ha="left", va="center", fontsize=11, weight="bold", color="#0f172a")
+    ax.set_title("Churn Workflow: From Question to Action", fontsize=20, weight="bold", pad=10)
+    ax.text(
+        0.5,
+        0.91,
+        "A readable step-by-step flow for business and technical readers",
+        ha="center",
+        va="center",
+        fontsize=11,
+        color="#334155",
+    )
 
-    # Steps: simple snake layout with fewer connectors.
-    box_w, box_h = 0.22, 0.11
     steps = [
-        (0.09, 0.72, "1) Raw Data", "Customer profile + behavior", "#bfdbfe"),
-        (0.39, 0.72, "2) Cleaning", "Missing values, duplicates", "#bfdbfe"),
-        (0.69, 0.72, "3) Feature Matrix", "Encoded X and target y", "#bfdbfe"),
-        (0.09, 0.44, "4) Baseline", "Logistic Regression", "#bbf7d0"),
-        (0.39, 0.44, "5) Benchmark", "Tree, RF, KNN, SVM, GBM", "#bbf7d0"),
-        (0.69, 0.44, "6) Threshold", "Precision vs recall choice", "#bbf7d0"),
-        (0.24, 0.16, "7) Impact Estimate", "TP / FP / FN trade-off", "#fde68a"),
-        (0.54, 0.16, "8) Retention Plan", "Prioritized outreach list", "#fde68a"),
+        {
+            "title": "Business Goal",
+            "desc": "Identify customers\nmost likely to churn",
+            "output": "Output: target + success metric",
+            "color": "#dbeafe",
+        },
+        {
+            "title": "Data Preparation",
+            "desc": "Clean records,\nencode features",
+            "output": "Output: model-ready X, y",
+            "color": "#e0f2fe",
+        },
+        {
+            "title": "Model Training",
+            "desc": "Train LR, Tree,\nRF, KNN, SVM, GBM",
+            "output": "Output: candidate models",
+            "color": "#dcfce7",
+        },
+        {
+            "title": "Model Selection",
+            "desc": "Compare accuracy,\nAUC, precision/recall",
+            "output": "Output: preferred model",
+            "color": "#bbf7d0",
+        },
+        {
+            "title": "Threshold Strategy",
+            "desc": "Tune operating point\nfor outreach capacity",
+            "output": "Output: chosen threshold",
+            "color": "#fef3c7",
+        },
+        {
+            "title": "Retention Action",
+            "desc": "Rank customers\nand trigger campaigns",
+            "output": "Output: prioritized contact list",
+            "color": "#fde68a",
+        },
     ]
-    for x, y, title, subtitle, color in steps:
-        _draw_step(ax, x, y, box_w, box_h, title, subtitle, color)
 
-    # Clean, non-crossing arrows.
-    arrows = [
-        ((0.31, 0.775), (0.39, 0.775)),  # 1 -> 2
-        ((0.61, 0.775), (0.69, 0.775)),  # 2 -> 3
-        ((0.80, 0.72), (0.20, 0.55)),    # 3 -> 4 (phase transition)
-        ((0.31, 0.495), (0.39, 0.495)),  # 4 -> 5
-        ((0.61, 0.495), (0.69, 0.495)),  # 5 -> 6
-        ((0.80, 0.44), (0.35, 0.27)),    # 6 -> 7 (decision transition)
-        ((0.46, 0.215), (0.54, 0.215)),  # 7 -> 8
-    ]
-    for start, end in arrows:
-        arrow = FancyArrowPatch(
-            posA=start,
-            posB=end,
-            arrowstyle="-|>",
-            mutation_scale=12,
-            linewidth=1.5,
-            color="#1f2937",
-            connectionstyle="arc3,rad=0.0",
+    n = len(steps)
+    start_x = 0.035
+    gap = 0.012
+    box_w = (0.93 - gap * (n - 1)) / n
+    box_h = 0.38
+    y = 0.38
+
+    for i, step in enumerate(steps):
+        x = start_x + i * (box_w + gap)
+        box = FancyBboxPatch(
+            (x, y),
+            box_w,
+            box_h,
+            boxstyle="round,pad=0.008,rounding_size=0.02",
+            linewidth=1.8,
+            edgecolor="#1f2937",
+            facecolor=step["color"],
+            alpha=0.97,
         )
-        ax.add_patch(arrow)
+        ax.add_patch(box)
+
+        badge = Circle((x + 0.022, y + box_h - 0.035), 0.016, facecolor="#0f172a", edgecolor="none")
+        ax.add_patch(badge)
+        ax.text(x + 0.022, y + box_h - 0.035, str(i + 1), ha="center", va="center", fontsize=9, color="white", weight="bold")
+
+        ax.text(x + box_w / 2, y + box_h * 0.73, step["title"], ha="center", va="center", fontsize=11, weight="bold", color="#0f172a")
+        ax.text(x + box_w / 2, y + box_h * 0.48, step["desc"], ha="center", va="center", fontsize=9.2, color="#1f2937")
+        ax.text(x + box_w / 2, y + box_h * 0.18, step["output"], ha="center", va="center", fontsize=8.4, color="#334155")
+
+        if i < n - 1:
+            x1 = x + box_w
+            x2 = x + box_w + gap
+            arrow = FancyArrowPatch(
+                (x1 + 0.002, y + box_h / 2),
+                (x2 - 0.002, y + box_h / 2),
+                arrowstyle="-|>",
+                mutation_scale=13,
+                linewidth=1.6,
+                color="#0f172a",
+            )
+            ax.add_patch(arrow)
 
     ax.text(
         0.5,
-        0.055,
-        "Flow: prepare data -> compare models -> choose threshold -> execute retention actions",
+        0.20,
+        "Decision logic: choose the threshold that balances churn capture with outreach cost",
         ha="center",
         va="center",
         fontsize=10,
         color="#334155",
     )
-    ax.set_title("Churn Pipeline Workflow", fontsize=18, weight="bold", pad=14)
-    fig.savefig(output_dir / "workflow_pipeline_visual.png", bbox_inches="tight")
+
+    out_path_new = output_dir / "workflow_story_map.png"
+    out_path_legacy = output_dir / "workflow_pipeline_visual.png"
+    fig.savefig(out_path_new, bbox_inches="tight")
+    fig.savefig(out_path_legacy, bbox_inches="tight")
     plt.close(fig)
 
 
