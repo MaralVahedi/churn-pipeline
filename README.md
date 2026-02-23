@@ -1,57 +1,80 @@
 # Customer Churn Prediction Pipeline
 
-This project answers one practical question:
+This repository focuses on one business problem:
 
-**If a retention team can only contact a limited number of customers, who should they prioritize to reduce churn most effectively?**
+**Given limited retention capacity, which customers should be prioritized for outreach to reduce churn most effectively?**
 
-The notebook walks from raw data to model decisions, then translates results into operational impact.
+It walks from raw data preparation to model comparison, threshold tuning, and operational interpretation.
 
-## Problem Context
+## Executive Summary
 
-Customer churn is expensive because replacing a lost customer usually costs more than retaining an existing one.
-A usable churn model should do two things:
+- Dataset size: **64,374 customer records**
+- Target: `Churn`
+- Models benchmarked: Logistic Regression, Decision Tree, Random Forest, KNN, SVM, Gradient Boosting
+- At a selected threshold near `0.5`, the logistic operating point achieves:
+  - Accuracy: `0.8267`
+  - Precision: `0.8138`
+  - Recall: `0.8175`
+  - F1: `0.8157`
+- Main practical outcome: the workflow turns model scores into a **retention action strategy** (who to contact first and how aggressive to be).
 
-1. Rank customers by risk.
-2. Keep a sensible balance between:
-   - catching real churners (`recall`)
-   - avoiding too many unnecessary outreach actions (`precision`)
+## Business Problem
 
-## Data Used
+Churn prediction is not only a modeling exercise.  
+The real decision is how to balance:
 
-- Records: **64,374 customers**
-- Target: `Churn` (churn vs no churn)
-- Main variables include tenure, usage frequency, support calls, payment delay, spending, and plan/contract attributes.
+1. Catching as many true churners as possible (`recall`)
+2. Avoiding too many unnecessary interventions (`precision`)
 
-Input file compatibility in the notebook:
+If threshold selection is ignored, a model can look strong on paper but perform poorly in actual retention operations.
+
+## Project Objectives
+
+1. Build a reproducible churn modeling flow from raw data.
+2. Compare different model families, not just one algorithm.
+3. Evaluate threshold trade-offs and connect metrics to operational cost.
+4. Produce outputs that a product/CRM team can act on.
+
+## Data Overview
+
+- Total records: `64,374`
+- Response variable: `Churn`
+- Core feature themes:
+  - customer profile: age, gender
+  - engagement: usage frequency, last interaction
+  - service friction: support calls, payment delay
+  - value/revenue proxies: spend and subscription/contract fields
+
+Accepted local input file names in notebook:
+
 - `data/churn_data.xlsx`
 - `data/churn_data.csv`
-- `hi.xlsx` (legacy file name from original workflow)
+- `hi.xlsx` (legacy filename)
 
 ## End-to-End Workflow
 
 ![Churn Workflow](images/workflow_story_map.png)
 
-Color guide:
-- Blue: data preparation
-- Green: modeling and evaluation
-- Yellow: business decision layer
+## Method Walkthrough
 
-## Walkthrough
+### 1) Data Preparation and Feature Readiness
 
-### Step 1: Build a Baseline and Understand Decision Thresholds
+The notebook performs cleaning and categorical encoding before training.
+This includes handling duplicates, missingness checks, and creating model-ready matrices.
 
-Logistic Regression is used as a transparent baseline.  
-Instead of fixing one threshold blindly, the notebook evaluates how precision/recall/F1 move with threshold changes.
+### 2) Baseline + Threshold Analysis
+
+Logistic Regression is used as the baseline because it is easy to interpret and suitable for threshold tuning.
 
 ![Logistic Threshold Tradeoff](images/logistic_threshold_tradeoff.png)
 
-Why this matters:
-- lower threshold catches more churners but increases false alerts
-- higher threshold reduces false alerts but misses more churners
+Interpretation:
+- lower thresholds increase recall but also increase false alerts
+- higher thresholds reduce false alerts but miss more churners
 
-### Step 2: Compare Model Families
+### 3) Model Family Benchmarking
 
-Multiple algorithms are tested to avoid relying on one modeling assumption.
+Multiple models are compared to test whether non-linear methods materially improve prediction.
 
 | Model | Reported Performance |
 |---|---|
@@ -64,45 +87,51 @@ Multiple algorithms are tested to avoid relying on one modeling assumption.
 
 ![Model Comparison Summary](images/model_comparison_summary.png)
 
-### Step 3: Translate Predictions Into Business Impact
+### 4) Operational Impact View
 
-At the selected operating point (threshold around `0.5`), the notebook confusion matrix implies:
-- many churners are correctly captured
-- a smaller but non-trivial number of false alerts remains
+At the selected threshold (`~0.5`), confusion-matrix counts are:
 
-This is the key trade-off for retention operations.
+| Outcome | Count |
+|---|---:|
+| True Positives (churn correctly flagged) | 4,936 |
+| False Positives (unnecessary outreach) | 1,129 |
+| False Negatives (missed churners) | 1,102 |
+| True Negatives | 5,708 |
 
 ![Retention Impact at Threshold 0.5](images/retention_impact_threshold_05.png)
 
-## What This Means for a Retention Team
+Operationally, this means the model can capture most churners while keeping false alerts within a manageable range for campaign teams.
 
-| Business Question | Model-Guided Action |
+## Decision Guidance for Retention Teams
+
+| Decision Question | How this project supports it |
 |---|---|
-| Who gets contacted first? | Rank customers by predicted churn probability and prioritize top-risk segment |
-| How aggressive should campaign volume be? | Tune threshold based on team capacity and acceptable false-alert rate |
-| How should success be measured? | Track prevented churn uplift, not only model accuracy |
+| Who should be contacted first? | Rank users by predicted churn probability and target highest risk |
+| How large should outreach be? | Choose threshold based on team capacity and false-alert tolerance |
+| How should success be measured? | Measure churn reduction lift, not only offline model metrics |
 
-## Important Modeling Caution
+## Risks and Validation Notes
 
-Some tree-based metrics are extremely high.  
-Before production deployment, run:
+Some tree-based metrics are extremely high and require caution before production use.
 
-1. leakage audit
-2. stricter validation split (for example out-of-time)
-3. probability calibration
-4. controlled retention experiment (A/B or uplift design)
+Recommended next validation steps:
+
+1. explicit leakage audit
+2. out-of-time split (temporal validation)
+3. calibration checks for probability quality
+4. controlled campaign experiment to estimate true retention lift
 
 ## Repository Structure
 
 | Path | Purpose |
 |---|---|
-| `churn-pipeline.ipynb` | Main notebook (full analysis) |
-| `images/` | README visuals |
-| `scripts/generate_readme_visuals.py` | Regenerate readable summary visuals |
-| `requirements.txt` | Dependencies |
+| `churn-pipeline.ipynb` | Main notebook (full end-to-end analysis) |
+| `images/` | Visual assets used in README |
+| `scripts/generate_readme_visuals.py` | Regenerate workflow + summary visuals |
+| `requirements.txt` | Python dependencies |
 | `data/README.md` | Data placement instructions |
 
-## Run
+## Run Locally
 
 ```bash
 pip install -r requirements.txt
