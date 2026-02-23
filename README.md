@@ -62,6 +62,7 @@ The correlation and feature distribution checks are used to understand variable 
 Logistic regression establishes an interpretable baseline and threshold behavior.
 
 ![Logistic Diagnostics](images/logistic_model_diagnostics.png)
+![Logistic Threshold Tradeoff](images/logistic_threshold_tradeoff.png)
 
 ### 3) Tree-Based Models
 
@@ -94,6 +95,8 @@ KNN, SVM, and Gradient Boosting are included for broader model family benchmarki
 | SVM | Accuracy `0.8303` |
 | Gradient Boosting | Accuracy `0.9950` |
 
+![Model Comparison Summary](images/model_comparison_summary.png)
+
 ## Data Scientist Notes (Critical Thinking)
 
 - Extremely high tree-based scores can reflect strong signal, but can also indicate leakage or split optimism.
@@ -109,6 +112,7 @@ KNN, SVM, and Gradient Boosting are included for broader model family benchmarki
 |---|---|
 | `churn-pipeline.ipynb` | Main end-to-end analysis notebook |
 | `images/` | Visual artifacts extracted from notebook outputs |
+| `scripts/generate_readme_visuals.py` | Recreate added summary visuals for README |
 | `requirements.txt` | Python dependencies |
 
 ## Run Locally
