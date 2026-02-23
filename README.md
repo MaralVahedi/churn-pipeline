@@ -1,92 +1,63 @@
-# Churn Pipeline: Data Science Case Study
+# Customer Churn Prediction Pipeline
 
-This repository showcases a full churn modeling workflow from raw customer data to model comparison and business interpretation.
+This project answers one practical question:
 
-Instead of reporting one model score, the notebook compares multiple modeling families and evaluates trade-offs relevant for retention teams.
+**If a retention team can only contact a limited number of customers, who should they prioritize to reduce churn most effectively?**
 
-## Business Question
+The notebook walks from raw data to model decisions, then translates results into operational impact.
 
-Which customer patterns are most associated with churn, and which modeling approach gives the most reliable signal for retention prioritization?
+## Problem Context
 
-## Why This Matters
+Customer churn is expensive because replacing a lost customer usually costs more than retaining an existing one.
+A usable churn model should do two things:
 
-| Stakeholder | Decision Supported |
-|---|---|
-| CRM / Lifecycle Team | Which customers should receive save campaigns first |
-| Product Team | Which customer attributes are linked to churn risk |
-| Revenue Team | How much avoidable churn can be targeted with interventions |
+1. Rank customers by risk.
+2. Keep a sensible balance between:
+   - catching real churners (`recall`)
+   - avoiding too many unnecessary outreach actions (`precision`)
 
-## Dataset
+## Data Used
 
-- Scale: **64,374 customer records**
-- Target: `Churn`
-- Source file used in notebook: `hi.xlsx` (legacy name)
-- Notebook now also supports local paths:
-  - `data/churn_data.xlsx`
-  - `data/churn_data.csv`
-  - `hi.xlsx`
+- Records: **64,374 customers**
+- Target: `Churn` (churn vs no churn)
+- Main variables include tenure, usage frequency, support calls, payment delay, spending, and plan/contract attributes.
 
-## Workflow (Architecture)
+Input file compatibility in the notebook:
+- `data/churn_data.xlsx`
+- `data/churn_data.csv`
+- `hi.xlsx` (legacy file name from original workflow)
+
+## End-to-End Workflow
 
 ```mermaid
 flowchart LR
-    A[Raw Churn Dataset] --> B[Cleaning and Type Checks]
-    B --> C[Encoding and Feature Prep]
-    C --> D[EDA and Correlation Review]
-    D --> E[Model Training]
-    E --> E1[Logistic Regression]
-    E --> E2[Decision Tree]
-    E --> E3[Random Forest]
-    E --> E4[KNN]
-    E --> E5[SVM]
-    E --> E6[Gradient Boosting]
-    E1 --> F[Metric Comparison]
-    E2 --> F
-    E3 --> F
-    E4 --> F
-    E5 --> F
-    E6 --> F
-    F --> G[Retention Insights]
+    A[Raw Customer Data] --> B[Cleaning and Null Checks]
+    B --> C[Feature Engineering and Encoding]
+    C --> D[Baseline Model: Logistic Regression]
+    D --> E[Model Family Comparison]
+    E --> F[Threshold Selection]
+    F --> G[Operational Impact Simulation]
+    G --> H[Retention Action Plan]
 ```
 
-## Analysis Story
+## Walkthrough
 
-### 1) Exploratory Signal Check
+### Step 1: Build a Baseline and Understand Decision Thresholds
 
-The correlation and feature distribution checks are used to understand variable relationships before modeling.
+Logistic Regression is used as a transparent baseline.  
+Instead of fixing one threshold blindly, the notebook evaluates how precision/recall/F1 move with threshold changes.
 
-![Correlation Heatmap](images/correlation_heatmap.png)
-
-### 2) Baseline Model: Logistic Regression
-
-Logistic regression establishes an interpretable baseline and threshold behavior.
-
-![Logistic Diagnostics](images/logistic_model_diagnostics.png)
 ![Logistic Threshold Tradeoff](images/logistic_threshold_tradeoff.png)
 
-### 3) Tree-Based Models
+Why this matters:
+- lower threshold catches more churners but increases false alerts
+- higher threshold reduces false alerts but misses more churners
 
-Decision Tree and Random Forest achieve very high predictive performance on this split.
+### Step 2: Compare Model Families
 
-![Decision Tree Metrics](images/decision_tree_tuned_metrics_1.png)
-![Random Forest Diagnostics](images/random_forest_diagnostics.png)
+Multiple algorithms are tested to avoid relying on one modeling assumption.
 
-Feature importance plots help identify high-impact predictors.
-
-![Decision Tree Feature Importance](images/decision_tree_feature_importance.png)
-![Random Forest Feature Importance](images/random_forest_feature_importance.png)
-
-### 4) Additional Classifiers for Comparison
-
-KNN, SVM, and Gradient Boosting are included for broader model family benchmarking.
-
-![KNN Confusion Matrix](images/knn_confusion_matrix.png)
-![SVM Confusion Matrix](images/svm_confusion_matrix.png)
-![Gradient Boosting Confusion Matrix](images/gradient_boosting_confusion_matrix.png)
-
-## Reported Model Performance (Notebook Run)
-
-| Model | Key Reported Metric(s) |
+| Model | Reported Performance |
 |---|---|
 | Logistic Regression | Accuracy `0.8263`, AUC `0.9050`, F1 `0.8184` |
 | Decision Tree (tuned) | Accuracy `0.9975`, AUC `0.9989` |
@@ -97,27 +68,48 @@ KNN, SVM, and Gradient Boosting are included for broader model family benchmarki
 
 ![Model Comparison Summary](images/model_comparison_summary.png)
 
-## Data Scientist Notes (Critical Thinking)
+### Step 3: Translate Predictions Into Business Impact
 
-- Extremely high tree-based scores can reflect strong signal, but can also indicate leakage or split optimism.
-- Before production use, validate with stricter evaluation:
-  - leakage audit,
-  - temporal or out-of-time split,
-  - probability calibration,
-  - uplift/A-B testing for retention action.
+At the selected operating point (threshold around `0.5`), the notebook confusion matrix implies:
+- many churners are correctly captured
+- a smaller but non-trivial number of false alerts remains
 
-## Repository Contents
+This is the key trade-off for retention operations.
+
+![Retention Impact at Threshold 0.5](images/retention_impact_threshold_05.png)
+
+## What This Means for a Retention Team
+
+| Business Question | Model-Guided Action |
+|---|---|
+| Who gets contacted first? | Rank customers by predicted churn probability and prioritize top-risk segment |
+| How aggressive should campaign volume be? | Tune threshold based on team capacity and acceptable false-alert rate |
+| How should success be measured? | Track prevented churn uplift, not only model accuracy |
+
+## Important Modeling Caution
+
+Some tree-based metrics are extremely high.  
+Before production deployment, run:
+
+1. leakage audit
+2. stricter validation split (for example out-of-time)
+3. probability calibration
+4. controlled retention experiment (A/B or uplift design)
+
+## Repository Structure
 
 | Path | Purpose |
 |---|---|
-| `churn-pipeline.ipynb` | Main end-to-end analysis notebook |
-| `images/` | Visual artifacts extracted from notebook outputs |
-| `scripts/generate_readme_visuals.py` | Recreate added summary visuals for README |
-| `requirements.txt` | Python dependencies |
+| `churn-pipeline.ipynb` | Main notebook (full analysis) |
+| `images/` | README visuals |
+| `scripts/generate_readme_visuals.py` | Regenerate readable summary visuals |
+| `requirements.txt` | Dependencies |
+| `data/README.md` | Data placement instructions |
 
-## Run Locally
+## Run
 
 ```bash
 pip install -r requirements.txt
 jupyter notebook churn-pipeline.ipynb
+python scripts/generate_readme_visuals.py
 ```

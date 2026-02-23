@@ -85,6 +85,44 @@ def build_threshold_tradeoff_plot(output_dir: Path) -> None:
     plt.close(fig)
 
 
+def build_retention_impact_plot(output_dir: Path) -> None:
+    # Confusion matrix values from the notebook at threshold ~= 0.5
+    # [[TN, FP], [FN, TP]] = [[5708, 1129], [1102, 4936]]
+    values = {
+        "True Positives (churn correctly flagged)": 4936,
+        "False Positives (unnecessary outreach)": 1129,
+        "False Negatives (missed churners)": 1102,
+        "True Negatives (correctly ignored)": 5708,
+    }
+
+    labels = list(values.keys())
+    counts = list(values.values())
+    colors = ["#0f766e", "#b45309", "#b91c1c", "#334155"]
+
+    fig, ax = plt.subplots(figsize=(10, 5.2), dpi=200)
+    bars = ax.barh(labels, counts, color=colors)
+    ax.invert_yaxis()
+    ax.set_title("Operational Impact at Chosen Threshold (0.5)")
+    ax.set_xlabel("Number of Customers")
+
+    for bar, count in zip(bars, counts):
+        ax.text(bar.get_width() + 60, bar.get_y() + bar.get_height() / 2, f"{count:,}", va="center", fontsize=9)
+
+    total_churners = values["True Positives (churn correctly flagged)"] + values["False Negatives (missed churners)"]
+    caught_pct = values["True Positives (churn correctly flagged)"] / total_churners
+    ax.text(
+        0.01,
+        -0.22,
+        f"Interpretation: the model catches {caught_pct:.1%} of churners while generating {values['False Positives (unnecessary outreach)']:,} false alerts.",
+        transform=ax.transAxes,
+        fontsize=9,
+    )
+    ax.grid(axis="x", alpha=0.2)
+    plt.tight_layout()
+    fig.savefig(output_dir / "retention_impact_threshold_05.png", bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     output_dir = repo_root / "images"
@@ -92,9 +130,9 @@ def main() -> None:
 
     build_model_summary_plot(output_dir=output_dir)
     build_threshold_tradeoff_plot(output_dir=output_dir)
+    build_retention_impact_plot(output_dir=output_dir)
     print("Generated README visuals in", output_dir)
 
 
 if __name__ == "__main__":
     main()
-
