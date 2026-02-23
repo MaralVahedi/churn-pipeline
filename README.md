@@ -29,16 +29,12 @@ Input file compatibility in the notebook:
 
 ## End-to-End Workflow
 
-```mermaid
-flowchart LR
-    A[Raw Customer Data] --> B[Cleaning and Null Checks]
-    B --> C[Feature Engineering and Encoding]
-    C --> D[Baseline Model: Logistic Regression]
-    D --> E[Model Family Comparison]
-    E --> F[Threshold Selection]
-    F --> G[Operational Impact Simulation]
-    G --> H[Retention Action Plan]
-```
+![Churn Workflow](images/workflow_pipeline_visual.png)
+
+Color guide:
+- Blue: data preparation
+- Green: modeling and evaluation
+- Yellow: business decision layer
 
 ## Walkthrough
 
